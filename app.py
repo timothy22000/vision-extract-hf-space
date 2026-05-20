@@ -576,21 +576,21 @@ theme = gr.themes.Base(
     font=gr.themes.GoogleFont("Inter"),
     font_mono=gr.themes.GoogleFont("JetBrains Mono"),
 ).set(
-    body_background_fill="#ffffff",
+    body_background_fill="#f5f5f7",
     body_text_color="#1d1d1f",
     body_text_color_subdued="#86868b",
-    block_background_fill="#ffffff",
-    block_border_width="1px",
-    block_border_color="#e8e8ed",
-    block_radius="12px",
-    block_shadow="0 1px 3px 0 rgba(0, 0, 0, 0.04)",
+    block_background_fill="transparent",
+    block_border_width="0px",
+    block_border_color="transparent",
+    block_radius="0px",
+    block_shadow="none",
     block_label_text_size="13px",
     block_label_text_weight="500",
-    block_label_text_color="#6e6e73",
+    block_label_text_color="#86868b",
     block_title_text_size="14px",
     block_title_text_weight="600",
-    input_background_fill="#f5f5f7",
-    input_border_color="#e8e8ed",
+    input_background_fill="#ffffff",
+    input_border_color="#d2d2d7",
     input_border_width="1px",
     input_radius="8px",
     input_text_size="15px",
@@ -599,225 +599,297 @@ theme = gr.themes.Base(
     button_primary_text_color="#ffffff",
     button_primary_border_color="transparent",
     button_primary_shadow="none",
-    button_secondary_background_fill="#f5f5f7",
-    button_secondary_background_fill_hover="#e8e8ed",
+    button_secondary_background_fill="#ffffff",
+    button_secondary_background_fill_hover="#f5f5f7",
     button_secondary_text_color="#1d1d1f",
     button_secondary_border_color="#d2d2d7",
-    button_large_radius="12px",
+    button_large_radius="10px",
     button_small_radius="8px",
     button_large_text_size="15px",
     button_large_text_weight="500",
-    shadow_drop="0 1px 3px 0 rgba(0, 0, 0, 0.04)",
-    shadow_drop_lg="0 4px 12px 0 rgba(0, 0, 0, 0.06)",
+    shadow_drop="none",
+    shadow_drop_lg="none",
     checkbox_border_radius="6px",
     slider_color="#0071e3",
-    table_radius="10px",
+    table_radius="0px",
     table_border_color="#e8e8ed",
-    table_even_background_fill="#fafafa",
-    table_odd_background_fill="#ffffff",
+    table_even_background_fill="#ffffff",
+    table_odd_background_fill="#f9f9fb",
 )
 
 css = """
-/* Global */
+/* ── Base ── */
 .gradio-container {
-    max-width: 960px !important;
+    max-width: 980px !important;
     margin: 0 auto !important;
-    padding: 48px 24px !important;
+    padding: 40px 20px !important;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
     -webkit-font-smoothing: antialiased !important;
+    background: #f5f5f7 !important;
 }
 
-/* Hero header */
+/* Kill every Gradio-generated border, shadow and background on wrapper elements */
+.gradio-container .gr-group,
+.gradio-container .gr-block,
+.gradio-container .gr-box,
+.gradio-container .gr-panel,
+.gradio-container .block {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* ── Main surface card ── */
+.main-surface {
+    background: #ffffff !important;
+    border-radius: 18px !important;
+    padding: 36px 32px !important;
+    border: none !important;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04) !important;
+}
+
+/* ── Typography ── */
 .hero-title {
     text-align: center;
-    font-size: 40px !important;
+    font-size: 36px !important;
     font-weight: 700 !important;
-    letter-spacing: -0.02em !important;
+    letter-spacing: -0.025em !important;
     color: #1d1d1f !important;
-    margin-bottom: 4px !important;
-    line-height: 1.1 !important;
+    margin: 0 0 4px 0 !important;
+    line-height: 1.15 !important;
+    background: transparent !important;
 }
 .hero-title p { margin: 0 !important; }
 
 .hero-subtitle {
     text-align: center;
-    font-size: 18px !important;
+    font-size: 16px !important;
     font-weight: 400 !important;
     color: #86868b !important;
-    margin-bottom: 36px !important;
+    margin: 0 0 28px 0 !important;
     line-height: 1.4 !important;
+    background: transparent !important;
 }
 .hero-subtitle p { margin: 0 !important; }
 
-/* Warning banner */
+.section-label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: #86868b !important;
+    margin: 0 0 16px 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+}
+.section-label p { margin: 0 !important; }
+
+/* ── Status banner ── */
 .api-warning {
-    background: #fffbeb !important;
-    border: 1px solid #fde68a !important;
-    border-radius: 12px !important;
-    padding: 14px 20px !important;
-    margin-bottom: 24px !important;
-    font-size: 14px !important;
-    color: #92400e !important;
+    background: #f0f5ff !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 12px 16px !important;
+    margin: 0 0 20px 0 !important;
+    font-size: 13px !important;
+    color: #424245 !important;
 }
 .api-warning p { margin: 0 !important; }
 
-/* Tabs — pill style segmented control */
+/* ── Tabs — segmented control ── */
 .tabs > .tab-nav {
     display: flex !important;
     justify-content: center !important;
-    gap: 4px !important;
-    background: #f5f5f7 !important;
-    border-radius: 10px !important;
-    padding: 3px !important;
+    gap: 2px !important;
+    background: #e8e8ed !important;
+    border-radius: 9px !important;
+    padding: 2px !important;
     border: none !important;
-    margin-bottom: 32px !important;
+    margin: 0 auto 28px auto !important;
     width: fit-content !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
 }
 .tabs > .tab-nav > button {
     border: none !important;
-    border-radius: 8px !important;
-    padding: 8px 28px !important;
-    font-size: 14px !important;
+    border-radius: 7px !important;
+    padding: 7px 24px !important;
+    font-size: 13px !important;
     font-weight: 500 !important;
     color: #6e6e73 !important;
     background: transparent !important;
-    transition: all 0.2s ease !important;
+    transition: all 0.15s ease !important;
 }
 .tabs > .tab-nav > button.selected {
     background: #ffffff !important;
     color: #1d1d1f !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06) !important;
 }
 
-/* Cards */
-.card {
-    background: #ffffff !important;
-    border: 1px solid #e8e8ed !important;
-    border-radius: 16px !important;
-    padding: 24px !important;
-    margin-bottom: 16px !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+/* ── Remove card wrappers — let controls sit flush ── */
+.card, .results-card {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 0 20px 0 !important;
+    box-shadow: none !important;
 }
 
-/* Section labels */
-.section-label {
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.06em !important;
-    color: #86868b !important;
-    margin-bottom: 12px !important;
+/* ── Inputs — clean fields on the white surface ── */
+input[type="text"],
+input[type="password"],
+input[type="number"],
+textarea,
+.wrap input,
+.wrap textarea {
+    background: #f5f5f7 !important;
+    border: 1px solid transparent !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    transition: border-color 0.15s ease !important;
 }
-.section-label p { margin: 0 !important; }
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+.wrap input:focus,
+.wrap textarea:focus {
+    border-color: #0071e3 !important;
+    outline: none !important;
+}
 
-/* Primary button — Apple blue pill */
+/* Dropdowns */
+.wrap select, .wrap .dropdown {
+    background: #f5f5f7 !important;
+    border: 1px solid transparent !important;
+    border-radius: 8px !important;
+}
+
+/* ── Primary button ── */
 .primary-btn {
     background: #0071e3 !important;
     color: #ffffff !important;
     border: none !important;
-    border-radius: 980px !important;
-    padding: 12px 32px !important;
-    font-size: 15px !important;
+    border-radius: 10px !important;
+    padding: 11px 28px !important;
+    font-size: 14px !important;
     font-weight: 500 !important;
     cursor: pointer !important;
-    transition: background 0.2s ease !important;
+    transition: background 0.15s ease !important;
     width: 100% !important;
-    margin: 8px 0 !important;
+    margin: 16px 0 0 0 !important;
 }
 .primary-btn:hover {
     background: #0062cc !important;
 }
 
-/* Results card */
-.results-card {
-    background: #f9f9fb !important;
-    border: 1px solid #e8e8ed !important;
-    border-radius: 16px !important;
-    padding: 24px !important;
-    margin-top: 0 !important;
-}
-
-/* Dataframe */
-.dataframe-container {
-    border-radius: 12px !important;
-    overflow: hidden !important;
-    border: 1px solid #e8e8ed !important;
-}
+/* ── Tables ── */
 table {
     font-size: 13px !important;
     font-family: 'JetBrains Mono', monospace !important;
+    border-collapse: collapse !important;
+    width: 100% !important;
 }
 th {
     background: #f5f5f7 !important;
     font-weight: 600 !important;
-    font-size: 12px !important;
+    font-size: 11px !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.04em !important;
-    color: #6e6e73 !important;
-    border-bottom: 1px solid #d2d2d7 !important;
+    letter-spacing: 0.05em !important;
+    color: #86868b !important;
+    padding: 10px 12px !important;
+    border-bottom: 1px solid #e8e8ed !important;
+    text-align: left !important;
+}
+td {
+    padding: 8px 12px !important;
+    border-bottom: 1px solid #f0f0f3 !important;
+    color: #1d1d1f !important;
 }
 
-/* Accordion */
+/* ── Accordion — minimal ── */
 .accordion {
-    border: 1px solid #e8e8ed !important;
-    border-radius: 12px !important;
+    border: none !important;
+    border-radius: 0 !important;
     overflow: hidden !important;
+    background: transparent !important;
 }
 .accordion > .label-wrap {
-    padding: 12px 16px !important;
-    font-size: 14px !important;
+    padding: 10px 0 !important;
+    font-size: 13px !important;
     font-weight: 500 !important;
-    color: #6e6e73 !important;
-    background: #fafafa !important;
+    color: #86868b !important;
+    background: transparent !important;
+    border: none !important;
 }
 
-/* Gallery */
+/* ── Gallery ── */
 .gallery {
-    border-radius: 12px !important;
+    border-radius: 10px !important;
     overflow: hidden !important;
 }
 
-/* Setup section */
-.setup-section {
-    margin-top: 48px !important;
-    border-top: 1px solid #e8e8ed !important;
-    padding-top: 24px !important;
-}
-.setup-section .accordion {
-    border: none !important;
-    background: transparent !important;
-}
-.setup-section .accordion > .label-wrap {
-    background: transparent !important;
-    color: #86868b !important;
-    font-size: 13px !important;
+/* ── Divider between input/output columns ── */
+.column-separator {
+    border-left: 1px solid #e8e8ed !important;
+    padding-left: 28px !important;
 }
 
-/* Footer */
+/* ── Setup section ── */
+.setup-section {
+    margin-top: 32px !important;
+    padding-top: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* ── Footer ── */
 .footer-text {
     text-align: center !important;
     font-size: 12px !important;
     color: #b0b0b8 !important;
-    margin-top: 48px !important;
-    padding-top: 24px !important;
-    border-top: 1px solid #f0f0f3 !important;
+    margin-top: 32px !important;
+    padding-top: 16px !important;
+    border: none !important;
+    background: transparent !important;
 }
 .footer-text p { margin: 0 !important; }
 
-/* Cost note */
+/* ── Helper text ── */
 .cost-note {
     font-size: 12px !important;
     color: #86868b !important;
     line-height: 1.5 !important;
-    margin-top: 8px !important;
+    margin-top: 4px !important;
 }
 .cost-note p { margin: 0 !important; }
 
-/* Slider refinement */
+/* ── Sliders ── */
 .wrap input[type="range"] {
     accent-color: #0071e3 !important;
+}
+
+/* ── Image upload — no heavy border ── */
+.image-container, .upload-container, .video-container {
+    border: 1px dashed #d2d2d7 !important;
+    border-radius: 10px !important;
+    background: #fafafa !important;
+}
+
+/* ── Remove label borders Gradio adds ── */
+.gradio-container label span,
+.gradio-container .label-wrap span {
+    background: transparent !important;
+}
+
+/* ── Checkbox ── */
+input[type="checkbox"] {
+    accent-color: #0071e3 !important;
+}
+
+/* ── Radio buttons ── */
+.radio-group label {
+    font-size: 13px !important;
 }
 """
 
@@ -879,44 +951,43 @@ with gr.Blocks(**_blocks_kwargs) as demo:
         elem_classes=["hero-subtitle"],
     )
 
-    # Status banner
-    if OWNER_API_KEY:
-        gr.Markdown(
-            f"**Free to try** — {RATE_LIMIT_IMAGES_PER_HOUR} image / "
-            f"{RATE_LIMIT_VIDEOS_PER_HOUR} video extractions per hour. "
-            "Bring your own API key to remove rate limits.",
-            elem_classes=["api-warning"],
-        )
-    else:
-        gr.Markdown(
-            "**No shared API key configured.** Enter your own key below or "
-            "see the *Setup* section at the bottom.",
-            elem_classes=["api-warning"],
-        )
+    with gr.Group(elem_classes=["main-surface"]):
+        # Status banner
+        if OWNER_API_KEY:
+            gr.Markdown(
+                f"**Free to try** — {RATE_LIMIT_IMAGES_PER_HOUR} image / "
+                f"{RATE_LIMIT_VIDEOS_PER_HOUR} video extractions per hour. "
+                "Bring your own API key to remove limits.",
+                elem_classes=["api-warning"],
+            )
+        else:
+            gr.Markdown(
+                "**No shared key configured.** Enter your own key below or "
+                "see the *Setup* section at the bottom.",
+                elem_classes=["api-warning"],
+            )
 
-    # Shared user API key input (outside tabs, applies to both)
-    with gr.Accordion("Your API Key (optional — removes rate limits)", open=False):
-        user_key_input = gr.Textbox(
-            value="",
-            label="Anthropic API Key",
-            placeholder="sk-ant-... (leave blank to use free tier)",
-            type="password",
-            lines=1,
-        )
-        gr.Markdown(
-            "Your key is sent directly to Anthropic and is never stored. "
-            "With your own key: no rate limits, no frame caps.",
-            elem_classes=["cost-note"],
-        )
+        with gr.Accordion("Your API Key (optional)", open=False):
+            user_key_input = gr.Textbox(
+                value="",
+                label="Anthropic API Key",
+                placeholder="sk-ant-... (leave blank to use free tier)",
+                type="password",
+                lines=1,
+            )
+            gr.Markdown(
+                "Sent directly to Anthropic, never stored. "
+                "Removes rate limits and frame caps.",
+                elem_classes=["cost-note"],
+            )
 
-    with gr.Tabs(elem_classes=["tabs"]):
-        # =================================================================
-        # IMAGE TAB
-        # =================================================================
-        with gr.Tab("Image"):
-            with gr.Row(equal_height=False):
-                with gr.Column(scale=1):
-                    with gr.Group(elem_classes=["card"]):
+        with gr.Tabs(elem_classes=["tabs"]):
+            # =============================================================
+            # IMAGE TAB
+            # =============================================================
+            with gr.Tab("Image"):
+                with gr.Row(equal_height=False):
+                    with gr.Column(scale=1):
                         gr.Markdown("INPUT", elem_classes=["section-label"])
                         img_input = gr.Image(
                             type="filepath", label="Upload Image", height=220
@@ -925,212 +996,182 @@ with gr.Blocks(**_blocks_kwargs) as demo:
                             choices=MODEL_CHOICES,
                             value=DEFAULT_MODEL,
                             label="Model",
-                            info="All models available on free tier",
                         )
                         img_prompt = gr.Textbox(
                             value=DEFAULT_PROMPT, label="Extraction Prompt", lines=2
                         )
+                        with gr.Accordion("Crop Region", open=False):
+                            with gr.Row():
+                                img_cl = gr.Number(value=0, label="Left", precision=0)
+                                img_ct = gr.Number(value=0, label="Top", precision=0)
+                                img_cr = gr.Number(value=0, label="Right", precision=0)
+                                img_cb = gr.Number(value=0, label="Bottom", precision=0)
+                        img_format = gr.Radio(
+                            choices=["Table", "CSV", "JSON", "Markdown"],
+                            value="Table",
+                            label="Output Format",
+                        )
+                        img_btn = gr.Button(
+                            "Extract Data", elem_classes=["primary-btn"], variant="primary"
+                        )
 
-                    with gr.Accordion("Crop Region", open=False):
-                        with gr.Row():
-                            img_cl = gr.Number(value=0, label="Left", precision=0)
-                            img_ct = gr.Number(value=0, label="Top", precision=0)
-                            img_cr = gr.Number(value=0, label="Right", precision=0)
-                            img_cb = gr.Number(value=0, label="Bottom", precision=0)
-
-                    img_format = gr.Radio(
-                        choices=["Table", "CSV", "JSON", "Markdown"],
-                        value="Table",
-                        label="Output Format",
-                    )
-                    img_btn = gr.Button(
-                        "Extract Data", elem_classes=["primary-btn"], variant="primary"
-                    )
-
-                with gr.Column(scale=1):
-                    with gr.Group(elem_classes=["results-card"]):
+                    with gr.Column(scale=1, elem_classes=["column-separator"]):
                         gr.Markdown("RESULTS", elem_classes=["section-label"])
                         img_stats = gr.HTML(value="")
                         img_df = gr.Dataframe(label="Extracted Table", wrap=True)
                         img_text = gr.Textbox(
-                            label="Extracted Data",
-                            lines=12,
-                            visible=False,
+                            label="Extracted Data", lines=12, visible=False,
                         )
 
-            gr.Examples(
-                examples=[["sample_table.png"], ["sample_receipt.png"]],
-                inputs=[img_input],
-                label="Try an example",
-            )
-
-            def on_image_format_change(fmt):
-                if fmt == "Table":
-                    return gr.update(visible=True), gr.update(visible=False)
-                return gr.update(visible=False), gr.update(visible=True)
-
-            img_format.change(
-                on_image_format_change, [img_format], [img_df, img_text]
-            )
-
-            def on_image_submit(image, model, prompt, cl, ct, cr, cb, fmt, ukey, request: gr.Request):
-                df, text, stats = process_image(
-                    image, model, prompt, cl, ct, cr, cb, fmt,
-                    user_api_key=ukey, request=request,
+                gr.Examples(
+                    examples=[["sample_table.png"], ["sample_receipt.png"]],
+                    inputs=[img_input],
+                    label="Try an example",
                 )
-                if fmt == "Table":
-                    return df, "", stats, gr.update(visible=True), gr.update(visible=False)
-                return None, text, stats, gr.update(visible=False), gr.update(visible=True)
 
-            img_btn.click(
-                on_image_submit,
-                [img_input, img_model, img_prompt, img_cl, img_ct, img_cr, img_cb, img_format, user_key_input],
-                [img_df, img_text, img_stats, img_df, img_text],
-            )
+                def on_image_format_change(fmt):
+                    if fmt == "Table":
+                        return gr.update(visible=True), gr.update(visible=False)
+                    return gr.update(visible=False), gr.update(visible=True)
 
-        # =================================================================
-        # VIDEO TAB
-        # =================================================================
-        with gr.Tab("Video"):
-            with gr.Row(equal_height=False):
-                with gr.Column(scale=1):
-                    with gr.Group(elem_classes=["card"]):
+                img_format.change(
+                    on_image_format_change, [img_format], [img_df, img_text]
+                )
+
+                def on_image_submit(image, model, prompt, cl, ct, cr, cb, fmt, ukey, request: gr.Request):
+                    df, text, stats = process_image(
+                        image, model, prompt, cl, ct, cr, cb, fmt,
+                        user_api_key=ukey, request=request,
+                    )
+                    if fmt == "Table":
+                        return df, "", stats, gr.update(visible=True), gr.update(visible=False)
+                    return None, text, stats, gr.update(visible=False), gr.update(visible=True)
+
+                img_btn.click(
+                    on_image_submit,
+                    [img_input, img_model, img_prompt, img_cl, img_ct, img_cr, img_cb, img_format, user_key_input],
+                    [img_df, img_text, img_stats, img_df, img_text],
+                )
+
+            # =============================================================
+            # VIDEO TAB
+            # =============================================================
+            with gr.Tab("Video"):
+                with gr.Row(equal_height=False):
+                    with gr.Column(scale=1):
                         gr.Markdown("INPUT", elem_classes=["section-label"])
                         vid_input = gr.Video(label="Upload Video")
                         vid_model = gr.Dropdown(
                             choices=MODEL_CHOICES,
                             value=DEFAULT_MODEL,
                             label="Model",
-                            info="All models available on free tier",
                         )
                         vid_prompt = gr.Textbox(
                             value=DEFAULT_PROMPT, label="Extraction Prompt", lines=2
                         )
 
-                    with gr.Group(elem_classes=["card"]):
                         gr.Markdown("FRAME EXTRACTION", elem_classes=["section-label"])
                         vid_interval = gr.Slider(
-                            minimum=1,
-                            maximum=120,
-                            value=30,
-                            step=1,
+                            minimum=1, maximum=120, value=30, step=1,
                             label="Extract every Nth frame",
                         )
                         vid_maxframes = gr.Slider(
-                            minimum=1,
-                            maximum=50,
-                            value=20,
-                            step=1,
+                            minimum=1, maximum=50, value=20, step=1,
                             label="Max frames to process",
-                            info="Free tier capped at 10 frames",
+                            info="Free tier capped at 10",
                         )
                         vid_dedup = gr.Checkbox(
                             value=True, label="Deduplicate frames"
                         )
                         vid_hashsize = gr.Slider(
-                            minimum=4,
-                            maximum=16,
-                            value=8,
-                            step=1,
+                            minimum=4, maximum=16, value=8, step=1,
                             label="Hash size",
                         )
                         vid_threshold = gr.Slider(
-                            minimum=0,
-                            maximum=10,
-                            value=0,
-                            step=1,
+                            minimum=0, maximum=10, value=0, step=1,
                             label="Similarity threshold",
                         )
+                        with gr.Accordion("Crop Region", open=False):
+                            with gr.Row():
+                                vid_cl = gr.Number(value=0, label="Left", precision=0)
+                                vid_ct = gr.Number(value=0, label="Top", precision=0)
+                                vid_cr = gr.Number(value=0, label="Right", precision=0)
+                                vid_cb = gr.Number(value=0, label="Bottom", precision=0)
+                        vid_format = gr.Radio(
+                            choices=["Table", "CSV", "JSON", "Markdown"],
+                            value="Table",
+                            label="Output Format",
+                        )
+                        gr.Markdown(
+                            "Free tier: max 10 frames per video. "
+                            "Use your own key for up to 50.",
+                            elem_classes=["cost-note"],
+                        )
+                        vid_btn = gr.Button(
+                            "Extract from Video",
+                            elem_classes=["primary-btn"],
+                            variant="primary",
+                        )
 
-                    with gr.Accordion("Crop Region", open=False):
-                        with gr.Row():
-                            vid_cl = gr.Number(value=0, label="Left", precision=0)
-                            vid_ct = gr.Number(value=0, label="Top", precision=0)
-                            vid_cr = gr.Number(value=0, label="Right", precision=0)
-                            vid_cb = gr.Number(value=0, label="Bottom", precision=0)
-
-                    vid_format = gr.Radio(
-                        choices=["Table", "CSV", "JSON", "Markdown"],
-                        value="Table",
-                        label="Output Format",
-                    )
-
-                    gr.Markdown(
-                        "Free tier: max 10 frames per video. "
-                        "Use your own key to process up to 50 frames.",
-                        elem_classes=["cost-note"],
-                    )
-
-                    vid_btn = gr.Button(
-                        "Extract from Video",
-                        elem_classes=["primary-btn"],
-                        variant="primary",
-                    )
-
-                with gr.Column(scale=1):
-                    with gr.Group(elem_classes=["results-card"]):
+                    with gr.Column(scale=1, elem_classes=["column-separator"]):
                         gr.Markdown("RESULTS", elem_classes=["section-label"])
                         vid_stats = gr.HTML(value="")
                         vid_df = gr.Dataframe(label="Extracted Table", wrap=True)
                         vid_text = gr.Textbox(
-                            label="Extracted Data",
-                            lines=12,
-                            visible=False,
+                            label="Extracted Data", lines=12, visible=False,
+                        )
+                        vid_gallery = gr.Gallery(
+                            label="Processed Frames", columns=4, height=200
                         )
 
-                    vid_gallery = gr.Gallery(
-                        label="Processed Frames", columns=4, height=200
-                    )
+                def on_dedup_toggle(checked):
+                    return gr.update(visible=checked), gr.update(visible=checked)
 
-            def on_dedup_toggle(checked):
-                return gr.update(visible=checked), gr.update(visible=checked)
+                vid_dedup.change(
+                    on_dedup_toggle, [vid_dedup], [vid_hashsize, vid_threshold]
+                )
 
-            vid_dedup.change(
-                on_dedup_toggle, [vid_dedup], [vid_hashsize, vid_threshold]
-            )
+                def on_video_format_change(fmt):
+                    if fmt == "Table":
+                        return gr.update(visible=True), gr.update(visible=False)
+                    return gr.update(visible=False), gr.update(visible=True)
 
-            def on_video_format_change(fmt):
-                if fmt == "Table":
-                    return gr.update(visible=True), gr.update(visible=False)
-                return gr.update(visible=False), gr.update(visible=True)
+                vid_format.change(
+                    on_video_format_change, [vid_format], [vid_df, vid_text]
+                )
 
-            vid_format.change(
-                on_video_format_change, [vid_format], [vid_df, vid_text]
-            )
-
-            def on_video_submit(
-                video, model, prompt, interval, maxf, dedup, hs, th,
-                cl, ct, cr, cb, fmt, ukey, request: gr.Request
-            ):
-                df, text, stats, gallery = process_video(
+                def on_video_submit(
                     video, model, prompt, interval, maxf, dedup, hs, th,
-                    cl, ct, cr, cb, fmt,
-                    user_api_key=ukey, request=request,
-                )
-                if fmt == "Table":
-                    return (
-                        df, "", stats, gallery,
-                        gr.update(visible=True), gr.update(visible=False),
+                    cl, ct, cr, cb, fmt, ukey, request: gr.Request
+                ):
+                    df, text, stats, gallery = process_video(
+                        video, model, prompt, interval, maxf, dedup, hs, th,
+                        cl, ct, cr, cb, fmt,
+                        user_api_key=ukey, request=request,
                     )
-                return (
-                    None, text, stats, gallery,
-                    gr.update(visible=False), gr.update(visible=True),
+                    if fmt == "Table":
+                        return (
+                            df, "", stats, gallery,
+                            gr.update(visible=True), gr.update(visible=False),
+                        )
+                    return (
+                        None, text, stats, gallery,
+                        gr.update(visible=False), gr.update(visible=True),
+                    )
+
+                vid_btn.click(
+                    on_video_submit,
+                    [
+                        vid_input, vid_model, vid_prompt, vid_interval, vid_maxframes,
+                        vid_dedup, vid_hashsize, vid_threshold,
+                        vid_cl, vid_ct, vid_cr, vid_cb, vid_format, user_key_input,
+                    ],
+                    [vid_df, vid_text, vid_stats, vid_gallery, vid_df, vid_text],
                 )
 
-            vid_btn.click(
-                on_video_submit,
-                [
-                    vid_input, vid_model, vid_prompt, vid_interval, vid_maxframes,
-                    vid_dedup, vid_hashsize, vid_threshold,
-                    vid_cl, vid_ct, vid_cr, vid_cb, vid_format, user_key_input,
-                ],
-                [vid_df, vid_text, vid_stats, vid_gallery, vid_df, vid_text],
-            )
-
-    # Setup section
-    with gr.Group(elem_classes=["setup-section"]):
-        with gr.Accordion("Setup: How to get an API key", open=False):
-            gr.Markdown(SETUP_MD)
+    # Setup section — outside the main surface
+    with gr.Accordion("Setup: How to get an API key", open=False, elem_classes=["setup-section"]):
+        gr.Markdown(SETUP_MD)
 
     gr.Markdown(
         "Built with Claude Vision API",
