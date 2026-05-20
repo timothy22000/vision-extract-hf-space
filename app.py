@@ -545,7 +545,7 @@ def process_video(
 # Theme + CSS
 # ---------------------------------------------------------------------------
 
-theme = gr.themes.Soft(
+theme = gr.themes.Base(
     primary_hue="blue",
     neutral_hue="gray",
     font=gr.themes.GoogleFont("Inter"),
@@ -553,84 +553,134 @@ theme = gr.themes.Soft(
 )
 
 css = """
-/* Force light mode everywhere */
-:root, .dark {
-    --body-background-fill: #f5f5f7 !important;
-    --background-fill-primary: #ffffff !important;
-    --background-fill-secondary: #f5f5f7 !important;
-    --body-text-color: #1d1d1f !important;
-    --body-text-color-subdued: #86868b !important;
-    --block-background-fill: #ffffff !important;
-    --block-border-color: #e5e5ea !important;
-    --input-background-fill: #f5f5f7 !important;
-    --color-accent: #0071e3 !important;
-    --color-accent-soft: #e8f0fe !important;
-    --neutral-100: #f5f5f7 !important;
-    --neutral-200: #e5e5ea !important;
-    --neutral-300: #d1d1d6 !important;
-    --neutral-400: #aeaeb2 !important;
-    --neutral-500: #8e8e93 !important;
-    --neutral-600: #636366 !important;
-    --neutral-700: #48484a !important;
-    --neutral-800: #1d1d1f !important;
-    color-scheme: light !important;
+:root, .dark, .gradio-container {
+    --body-background-fill: #000000 !important;
+    --background-fill-primary: #161617 !important;
+    --background-fill-secondary: #1c1c1e !important;
+    --block-background-fill: #1c1c1e !important;
+    --block-border-color: #2c2c2e !important;
+    --block-label-text-color: #8e8e93 !important;
+    --body-text-color: #f5f5f7 !important;
+    --body-text-color-subdued: #8e8e93 !important;
+    --input-background-fill: #2c2c2e !important;
+    --input-border-color: #3a3a3c !important;
+    --border-color-primary: #2c2c2e !important;
+    --color-accent: #0a84ff !important;
+    --color-accent-soft: rgba(10,132,255,0.15) !important;
+    --table-even-background-fill: #1c1c1e !important;
+    --table-odd-background-fill: #232324 !important;
+    --table-border-color: #2c2c2e !important;
+    --checkbox-border-color: #48484a !important;
+    --shadow-drop: none !important;
+    --shadow-drop-lg: none !important;
+    color-scheme: dark !important;
 }
 
+/* Base */
 .gradio-container {
-    max-width: 960px !important;
-    margin: 0 auto !important;
-    background: #f5f5f7 !important;
-    color: #1d1d1f !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #000000 !important;
+    color: #f5f5f7 !important;
 }
-
-/* Main white surface */
-.main-surface, .main-surface > div {
-    background: #ffffff !important;
-    border-radius: 16px !important;
-    border: 1px solid #e5e5ea !important;
+.main-surface {
+    background: #000000 !important;
+    border: none !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
-    color: #1d1d1f !important;
+    padding: 24px 32px !important;
 }
 .main-surface > div {
     border: none !important;
-    border-radius: 0 !important;
+    background: transparent !important;
 }
 
 /* Hero */
-.hero-title { text-align: center; margin-bottom: 2px !important; }
-.hero-title p { font-size: 32px !important; font-weight: 700 !important; letter-spacing: -0.02em !important; color: #1d1d1f !important; margin: 0 !important; }
-.hero-subtitle { text-align: center; margin-bottom: 24px !important; }
-.hero-subtitle p { font-size: 15px !important; color: #8e8e93 !important; margin: 0 !important; }
+.hero-title { text-align: center; margin: 0 0 2px 0 !important; padding: 16px 0 0 0 !important; }
+.hero-title p { font-size: 28px !important; font-weight: 700 !important; letter-spacing: -0.02em !important; color: #f5f5f7 !important; margin: 0 !important; }
+.hero-subtitle { text-align: center; margin: 0 0 20px 0 !important; }
+.hero-subtitle p { font-size: 14px !important; color: #8e8e93 !important; margin: 0 !important; }
 
 /* Section labels */
 .section-label p {
     font-size: 11px !important; font-weight: 600 !important; text-transform: uppercase !important;
-    letter-spacing: 0.06em !important; color: #8e8e93 !important; margin: 0 !important;
+    letter-spacing: 0.06em !important; color: #636366 !important; margin: 0 !important;
 }
 
 /* Banner */
-.api-warning { background: #f0f5ff !important; border-radius: 8px !important; border: none !important; }
-.api-warning p { font-size: 13px !important; color: #3c3c43 !important; margin: 0 !important; }
+.api-warning {
+    background: #1c1c1e !important; border: 1px solid #2c2c2e !important;
+    border-radius: 8px !important;
+}
+.api-warning p { font-size: 13px !important; color: #aeaeb2 !important; margin: 0 !important; }
 
-/* Primary button */
+/* Button */
 .primary-btn {
-    background: #0071e3 !important; color: #fff !important; border: none !important;
+    background: #0a84ff !important; color: #fff !important; border: none !important;
     border-radius: 10px !important; font-size: 14px !important; font-weight: 500 !important;
     padding: 10px 24px !important; width: 100% !important; margin-top: 12px !important;
 }
-.primary-btn:hover { background: #0062cc !important; }
+.primary-btn:hover { background: #0071e3 !important; }
 
 /* Column divider */
-.column-separator { border-left: 1px solid #e5e5ea !important; padding-left: 24px !important; }
+.column-separator { border-left: 1px solid #2c2c2e !important; padding-left: 24px !important; }
+
+/* Tables */
+table { font-family: 'JetBrains Mono', monospace !important; font-size: 13px !important; }
+th {
+    background: #1c1c1e !important; color: #8e8e93 !important;
+    font-size: 11px !important; text-transform: uppercase !important;
+    letter-spacing: 0.04em !important; font-weight: 600 !important;
+    border-bottom: 1px solid #2c2c2e !important;
+}
+td { color: #f5f5f7 !important; border-bottom: 1px solid #232324 !important; }
+
+/* Inputs — all uniform dark */
+input, textarea, select, .wrap input, .wrap textarea {
+    background: #2c2c2e !important; color: #f5f5f7 !important;
+    border: 1px solid #3a3a3c !important; border-radius: 8px !important;
+}
+input:focus, textarea:focus { border-color: #0a84ff !important; outline: none !important; }
+input::placeholder, textarea::placeholder { color: #636366 !important; }
+
+/* Labels */
+label, .label-wrap, span.svelte-1gfkn6j {
+    color: #aeaeb2 !important;
+}
+
+/* Dropdowns */
+.secondary-wrap, .wrap .secondary-wrap { background: #2c2c2e !important; border: 1px solid #3a3a3c !important; border-radius: 8px !important; }
+ul[role="listbox"] { background: #2c2c2e !important; border: 1px solid #3a3a3c !important; }
+ul[role="listbox"] li { color: #f5f5f7 !important; }
+ul[role="listbox"] li:hover, ul[role="listbox"] li.selected { background: #3a3a3c !important; }
+
+/* Upload areas */
+.upload-text { color: #636366 !important; }
+
+/* Accordion */
+.label-wrap { color: #aeaeb2 !important; }
+
+/* Slider track */
+input[type="range"] { accent-color: #0a84ff !important; }
 
 /* Footer */
-.footer-text p { font-size: 12px !important; color: #aeaeb2 !important; text-align: center !important; margin: 0 !important; }
+.footer-text p { font-size: 12px !important; color: #48484a !important; text-align: center !important; margin: 0 !important; }
+.cost-note p { font-size: 12px !important; color: #636366 !important; margin: 0 !important; }
 
-/* Helper text */
-.cost-note p { font-size: 12px !important; color: #8e8e93 !important; margin: 0 !important; }
-
-/* Setup section */
+/* Setup */
 .setup-section { border: none !important; box-shadow: none !important; background: transparent !important; }
+
+/* Gallery */
+.gallery { background: #1c1c1e !important; border-radius: 8px !important; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #1c1c1e; }
+::-webkit-scrollbar-thumb { background: #3a3a3c; border-radius: 3px; }
+
+/* Examples */
+.gallery-item, .gallery-item img { border-radius: 6px !important; }
 """
 
 # ---------------------------------------------------------------------------
@@ -707,7 +757,7 @@ with gr.Blocks(**_blocks_kwargs) as demo:
                 elem_classes=["api-warning"],
             )
 
-        with gr.Accordion("Your API Key (optional)", open=False):
+        with gr.Accordion("Your API Key (optional)", open=True):
             user_key_input = gr.Textbox(
                 value="",
                 label="Anthropic API Key",
