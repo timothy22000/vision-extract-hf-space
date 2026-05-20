@@ -545,352 +545,92 @@ def process_video(
 # Theme + CSS
 # ---------------------------------------------------------------------------
 
-theme = gr.themes.Base(
-    primary_hue=gr.themes.Color(
-        c50="#f5f5f7",
-        c100="#e8e8ed",
-        c200="#d2d2d7",
-        c300="#b0b0b8",
-        c400="#86868b",
-        c500="#6e6e73",
-        c600="#424245",
-        c700="#333336",
-        c800="#1d1d1f",
-        c900="#0a0a0a",
-        c950="#000000",
-    ),
-    secondary_hue=gr.themes.Color(
-        c50="#f0f5ff",
-        c100="#dce8ff",
-        c200="#b8d1ff",
-        c300="#7aabff",
-        c400="#4d8ffa",
-        c500="#0071e3",
-        c600="#0062cc",
-        c700="#0052a6",
-        c800="#004080",
-        c900="#003366",
-        c950="#002040",
-    ),
-    neutral_hue="zinc",
+theme = gr.themes.Soft(
+    primary_hue="blue",
+    neutral_hue="gray",
     font=gr.themes.GoogleFont("Inter"),
     font_mono=gr.themes.GoogleFont("JetBrains Mono"),
-).set(
-    body_background_fill="#f5f5f7",
-    body_text_color="#1d1d1f",
-    body_text_color_subdued="#86868b",
-    block_background_fill="transparent",
-    block_border_width="0px",
-    block_border_color="transparent",
-    block_radius="0px",
-    block_shadow="none",
-    block_label_text_size="13px",
-    block_label_text_weight="500",
-    block_label_text_color="#86868b",
-    block_title_text_size="14px",
-    block_title_text_weight="600",
-    input_background_fill="#ffffff",
-    input_border_color="#d2d2d7",
-    input_border_width="1px",
-    input_radius="8px",
-    input_text_size="15px",
-    button_primary_background_fill="#0071e3",
-    button_primary_background_fill_hover="#0062cc",
-    button_primary_text_color="#ffffff",
-    button_primary_border_color="transparent",
-    button_primary_shadow="none",
-    button_secondary_background_fill="#ffffff",
-    button_secondary_background_fill_hover="#f5f5f7",
-    button_secondary_text_color="#1d1d1f",
-    button_secondary_border_color="#d2d2d7",
-    button_large_radius="10px",
-    button_small_radius="8px",
-    button_large_text_size="15px",
-    button_large_text_weight="500",
-    shadow_drop="none",
-    shadow_drop_lg="none",
-    checkbox_border_radius="6px",
-    slider_color="#0071e3",
-    table_radius="0px",
-    table_border_color="#e8e8ed",
-    table_even_background_fill="#ffffff",
-    table_odd_background_fill="#f9f9fb",
 )
 
 css = """
-/* ── Base ── */
+/* Force light mode everywhere */
+:root, .dark {
+    --body-background-fill: #f5f5f7 !important;
+    --background-fill-primary: #ffffff !important;
+    --background-fill-secondary: #f5f5f7 !important;
+    --body-text-color: #1d1d1f !important;
+    --body-text-color-subdued: #86868b !important;
+    --block-background-fill: #ffffff !important;
+    --block-border-color: #e5e5ea !important;
+    --input-background-fill: #f5f5f7 !important;
+    --color-accent: #0071e3 !important;
+    --color-accent-soft: #e8f0fe !important;
+    --neutral-100: #f5f5f7 !important;
+    --neutral-200: #e5e5ea !important;
+    --neutral-300: #d1d1d6 !important;
+    --neutral-400: #aeaeb2 !important;
+    --neutral-500: #8e8e93 !important;
+    --neutral-600: #636366 !important;
+    --neutral-700: #48484a !important;
+    --neutral-800: #1d1d1f !important;
+    color-scheme: light !important;
+}
+
 .gradio-container {
-    max-width: 980px !important;
+    max-width: 960px !important;
     margin: 0 auto !important;
-    padding: 40px 20px !important;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    -webkit-font-smoothing: antialiased !important;
     background: #f5f5f7 !important;
+    color: #1d1d1f !important;
 }
 
-/* Kill every Gradio-generated border, shadow and background on wrapper elements */
-.gradio-container .gr-group,
-.gradio-container .gr-block,
-.gradio-container .gr-box,
-.gradio-container .gr-panel,
-.gradio-container .block {
-    border: none !important;
+/* Main white surface */
+.main-surface, .main-surface > div {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    border: 1px solid #e5e5ea !important;
     box-shadow: none !important;
-    background: transparent !important;
-}
-
-/* ── Main surface card ── */
-.main-surface {
-    background: #ffffff !important;
-    border-radius: 18px !important;
-    padding: 36px 32px !important;
-    border: none !important;
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04) !important;
-}
-
-/* ── Typography ── */
-.hero-title {
-    text-align: center;
-    font-size: 36px !important;
-    font-weight: 700 !important;
-    letter-spacing: -0.025em !important;
     color: #1d1d1f !important;
-    margin: 0 0 4px 0 !important;
-    line-height: 1.15 !important;
-    background: transparent !important;
 }
-.hero-title p { margin: 0 !important; }
-
-.hero-subtitle {
-    text-align: center;
-    font-size: 16px !important;
-    font-weight: 400 !important;
-    color: #86868b !important;
-    margin: 0 0 28px 0 !important;
-    line-height: 1.4 !important;
-    background: transparent !important;
-}
-.hero-subtitle p { margin: 0 !important; }
-
-.section-label {
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.05em !important;
-    color: #86868b !important;
-    margin: 0 0 16px 0 !important;
-    padding: 0 !important;
-    background: transparent !important;
-}
-.section-label p { margin: 0 !important; }
-
-/* ── Status banner ── */
-.api-warning {
-    background: #f0f5ff !important;
-    border: none !important;
-    border-radius: 10px !important;
-    padding: 12px 16px !important;
-    margin: 0 0 20px 0 !important;
-    font-size: 13px !important;
-    color: #424245 !important;
-}
-.api-warning p { margin: 0 !important; }
-
-/* ── Tabs — segmented control ── */
-.tabs > .tab-nav {
-    display: flex !important;
-    justify-content: center !important;
-    gap: 2px !important;
-    background: #e8e8ed !important;
-    border-radius: 9px !important;
-    padding: 2px !important;
-    border: none !important;
-    margin: 0 auto 28px auto !important;
-    width: fit-content !important;
-}
-.tabs > .tab-nav > button {
-    border: none !important;
-    border-radius: 7px !important;
-    padding: 7px 24px !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    color: #6e6e73 !important;
-    background: transparent !important;
-    transition: all 0.15s ease !important;
-}
-.tabs > .tab-nav > button.selected {
-    background: #ffffff !important;
-    color: #1d1d1f !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.06) !important;
-}
-
-/* ── Remove card wrappers — let controls sit flush ── */
-.card, .results-card {
-    background: transparent !important;
+.main-surface > div {
     border: none !important;
     border-radius: 0 !important;
-    padding: 0 !important;
-    margin: 0 0 20px 0 !important;
-    box-shadow: none !important;
 }
 
-/* ── Inputs — clean fields on the white surface ── */
-input[type="text"],
-input[type="password"],
-input[type="number"],
-textarea,
-.wrap input,
-.wrap textarea {
-    background: #f5f5f7 !important;
-    border: 1px solid transparent !important;
-    border-radius: 8px !important;
-    font-size: 14px !important;
-    transition: border-color 0.15s ease !important;
-}
-input[type="text"]:focus,
-input[type="password"]:focus,
-input[type="number"]:focus,
-textarea:focus,
-.wrap input:focus,
-.wrap textarea:focus {
-    border-color: #0071e3 !important;
-    outline: none !important;
+/* Hero */
+.hero-title { text-align: center; margin-bottom: 2px !important; }
+.hero-title p { font-size: 32px !important; font-weight: 700 !important; letter-spacing: -0.02em !important; color: #1d1d1f !important; margin: 0 !important; }
+.hero-subtitle { text-align: center; margin-bottom: 24px !important; }
+.hero-subtitle p { font-size: 15px !important; color: #8e8e93 !important; margin: 0 !important; }
+
+/* Section labels */
+.section-label p {
+    font-size: 11px !important; font-weight: 600 !important; text-transform: uppercase !important;
+    letter-spacing: 0.06em !important; color: #8e8e93 !important; margin: 0 !important;
 }
 
-/* Dropdowns */
-.wrap select, .wrap .dropdown {
-    background: #f5f5f7 !important;
-    border: 1px solid transparent !important;
-    border-radius: 8px !important;
-}
+/* Banner */
+.api-warning { background: #f0f5ff !important; border-radius: 8px !important; border: none !important; }
+.api-warning p { font-size: 13px !important; color: #3c3c43 !important; margin: 0 !important; }
 
-/* ── Primary button ── */
+/* Primary button */
 .primary-btn {
-    background: #0071e3 !important;
-    color: #ffffff !important;
-    border: none !important;
-    border-radius: 10px !important;
-    padding: 11px 28px !important;
-    font-size: 14px !important;
-    font-weight: 500 !important;
-    cursor: pointer !important;
-    transition: background 0.15s ease !important;
-    width: 100% !important;
-    margin: 16px 0 0 0 !important;
+    background: #0071e3 !important; color: #fff !important; border: none !important;
+    border-radius: 10px !important; font-size: 14px !important; font-weight: 500 !important;
+    padding: 10px 24px !important; width: 100% !important; margin-top: 12px !important;
 }
-.primary-btn:hover {
-    background: #0062cc !important;
-}
+.primary-btn:hover { background: #0062cc !important; }
 
-/* ── Tables ── */
-table {
-    font-size: 13px !important;
-    font-family: 'JetBrains Mono', monospace !important;
-    border-collapse: collapse !important;
-    width: 100% !important;
-}
-th {
-    background: #f5f5f7 !important;
-    font-weight: 600 !important;
-    font-size: 11px !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.05em !important;
-    color: #86868b !important;
-    padding: 10px 12px !important;
-    border-bottom: 1px solid #e8e8ed !important;
-    text-align: left !important;
-}
-td {
-    padding: 8px 12px !important;
-    border-bottom: 1px solid #f0f0f3 !important;
-    color: #1d1d1f !important;
-}
+/* Column divider */
+.column-separator { border-left: 1px solid #e5e5ea !important; padding-left: 24px !important; }
 
-/* ── Accordion — minimal ── */
-.accordion {
-    border: none !important;
-    border-radius: 0 !important;
-    overflow: hidden !important;
-    background: transparent !important;
-}
-.accordion > .label-wrap {
-    padding: 10px 0 !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    color: #86868b !important;
-    background: transparent !important;
-    border: none !important;
-}
+/* Footer */
+.footer-text p { font-size: 12px !important; color: #aeaeb2 !important; text-align: center !important; margin: 0 !important; }
 
-/* ── Gallery ── */
-.gallery {
-    border-radius: 10px !important;
-    overflow: hidden !important;
-}
+/* Helper text */
+.cost-note p { font-size: 12px !important; color: #8e8e93 !important; margin: 0 !important; }
 
-/* ── Divider between input/output columns ── */
-.column-separator {
-    border-left: 1px solid #e8e8ed !important;
-    padding-left: 28px !important;
-}
-
-/* ── Setup section ── */
-.setup-section {
-    margin-top: 32px !important;
-    padding-top: 0 !important;
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-}
-
-/* ── Footer ── */
-.footer-text {
-    text-align: center !important;
-    font-size: 12px !important;
-    color: #b0b0b8 !important;
-    margin-top: 32px !important;
-    padding-top: 16px !important;
-    border: none !important;
-    background: transparent !important;
-}
-.footer-text p { margin: 0 !important; }
-
-/* ── Helper text ── */
-.cost-note {
-    font-size: 12px !important;
-    color: #86868b !important;
-    line-height: 1.5 !important;
-    margin-top: 4px !important;
-}
-.cost-note p { margin: 0 !important; }
-
-/* ── Sliders ── */
-.wrap input[type="range"] {
-    accent-color: #0071e3 !important;
-}
-
-/* ── Image upload — no heavy border ── */
-.image-container, .upload-container, .video-container {
-    border: 1px dashed #d2d2d7 !important;
-    border-radius: 10px !important;
-    background: #fafafa !important;
-}
-
-/* ── Remove label borders Gradio adds ── */
-.gradio-container label span,
-.gradio-container .label-wrap span {
-    background: transparent !important;
-}
-
-/* ── Checkbox ── */
-input[type="checkbox"] {
-    accent-color: #0071e3 !important;
-}
-
-/* ── Radio buttons ── */
-.radio-group label {
-    font-size: 13px !important;
-}
+/* Setup section */
+.setup-section { border: none !important; box-shadow: none !important; background: transparent !important; }
 """
 
 # ---------------------------------------------------------------------------
