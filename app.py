@@ -4,12 +4,15 @@ Extract structured tabular data from images and videos using Claude's vision AI.
 """
 
 import base64
+import hashlib
 import json
 import os
 import random
 import shutil
 import tempfile
+import threading
 import time
+from collections import defaultdict
 from io import StringIO
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -45,6 +48,117 @@ MAX_TOKENS = 6000
 MAX_RETRIES = 3
 BASE_RETRY_DELAY = 2.0
 
+# Rate limiting — configurable via env vars
+RATE_LIMIT_IMAGES_PER_HOUR = int(os.environ.get("RATE_LIMIT_IMAGES", "10"))
+RATE_LIMIT_VIDEOS_PER_HOUR = int(os.environ.get("RATE_LIMIT_VIDEOS", "3"))
+DAILY_BUDGET_USD = float(os.environ.get("DAILY_BUDGET", "2.00"))
+
+# Owner API key is set as HF secret; users can optionally bring their own
+OWNER_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+
+
+# ---------------------------------------------------------------------------
+# Rate limiter + budget tracker
+# ---------------------------------------------------------------------------
+
+class RateLimiter:
+    """Thread-safe per-session rate limiter with global daily budget."""
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        # session_id -> list of timestamps
+        self._image_requests: Dict[str, List[float]] = defaultdict(list)
+        self._video_requests: Dict[str, List[float]] = defaultdict(list)
+        # Global daily spend tracking
+        self._daily_spend: float = 0.0
+        self._spend_date: str = ""
+
+    def _prune(self, timestamps: List[float], window: float = 3600.0) -> List[float]:
+        """Remove entries older than window seconds."""
+        cutoff = time.time() - window
+        return [t for t in timestamps if t > cutoff]
+
+    def _reset_daily_if_needed(self):
+        today = time.strftime("%Y-%m-%d")
+        if self._spend_date != today:
+            self._daily_spend = 0.0
+            self._spend_date = today
+
+    def check_image(self, session_id: str):
+        with self._lock:
+            self._reset_daily_if_needed()
+            if self._daily_spend >= DAILY_BUDGET_USD:
+                raise gr.Error(
+                    f"Daily usage limit reached (${DAILY_BUDGET_USD:.2f}). "
+                    "Please try again tomorrow or use your own API key."
+                )
+            self._image_requests[session_id] = self._prune(
+                self._image_requests[session_id]
+            )
+            if len(self._image_requests[session_id]) >= RATE_LIMIT_IMAGES_PER_HOUR:
+                raise gr.Error(
+                    f"Rate limit: max {RATE_LIMIT_IMAGES_PER_HOUR} image extractions "
+                    "per hour. Please wait or use your own API key."
+                )
+            self._image_requests[session_id].append(time.time())
+
+    def check_video(self, session_id: str):
+        with self._lock:
+            self._reset_daily_if_needed()
+            if self._daily_spend >= DAILY_BUDGET_USD:
+                raise gr.Error(
+                    f"Daily usage limit reached (${DAILY_BUDGET_USD:.2f}). "
+                    "Please try again tomorrow or use your own API key."
+                )
+            self._video_requests[session_id] = self._prune(
+                self._video_requests[session_id]
+            )
+            if len(self._video_requests[session_id]) >= RATE_LIMIT_VIDEOS_PER_HOUR:
+                raise gr.Error(
+                    f"Rate limit: max {RATE_LIMIT_VIDEOS_PER_HOUR} video extractions "
+                    "per hour. Please wait or use your own API key."
+                )
+            self._video_requests[session_id].append(time.time())
+
+    def record_spend(self, cost: float):
+        with self._lock:
+            self._reset_daily_if_needed()
+            self._daily_spend += cost
+
+    def remaining_budget(self) -> float:
+        with self._lock:
+            self._reset_daily_if_needed()
+            return max(0.0, DAILY_BUDGET_USD - self._daily_spend)
+
+
+rate_limiter = RateLimiter()
+
+
+def get_session_id(request: gr.Request) -> str:
+    """Derive a stable session identifier from the request."""
+    # Use IP + User-Agent hash as a fingerprint
+    ip = ""
+    ua = ""
+    if request:
+        ip = request.client.host or ""
+        ua = dict(request.headers).get("user-agent", "")
+    raw = f"{ip}:{ua}"
+    return hashlib.sha256(raw.encode()).hexdigest()[:16]
+
+
+def get_api_key(user_key: str) -> Tuple[str, bool]:
+    """Return (api_key, is_owner_key). User key takes priority."""
+    user_key = (user_key or "").strip()
+    if user_key and user_key.startswith("sk-ant-"):
+        return user_key, False
+    if OWNER_API_KEY:
+        return OWNER_API_KEY, True
+    raise gr.Error(
+        "No API key available. Set ANTHROPIC_API_KEY as a Space secret "
+        "or enter your own key below."
+    )
+
+
 # ---------------------------------------------------------------------------
 # Core helpers
 # ---------------------------------------------------------------------------
@@ -79,12 +193,12 @@ def compute_cost(input_tokens: int, output_tokens: int, model: str) -> float:
 
 
 def call_claude_vision(
-    image_path: Path, model: str, prompt: str
+    image_path: Path, model: str, prompt: str, api_key: str = ""
 ) -> Dict[str, Any]:
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise EnvironmentError("ANTHROPIC_API_KEY is not set.")
-    client = anthropic.Anthropic(api_key=api_key)
+    key = api_key or OWNER_API_KEY
+    if not key:
+        raise EnvironmentError("No API key available.")
+    client = anthropic.Anthropic(api_key=key)
     b64, media_type = encode_image_to_base64(image_path)
     start = time.time()
     message = client.messages.create(
@@ -117,11 +231,12 @@ def call_claude_vision(
 
 
 def call_with_retry(
-    image_path: Path, model: str, prompt: str, max_retries: int = MAX_RETRIES
+    image_path: Path, model: str, prompt: str, api_key: str = "",
+    max_retries: int = MAX_RETRIES,
 ) -> Dict[str, Any]:
     for attempt in range(max_retries):
         try:
-            return call_claude_vision(image_path, model, prompt)
+            return call_claude_vision(image_path, model, prompt, api_key)
         except (
             anthropic.RateLimitError,
             anthropic.APIConnectionError,
@@ -257,15 +372,20 @@ def process_image(
     crop_right: int,
     crop_bottom: int,
     output_format: str,
+    user_api_key: str = "",
+    request: gr.Request = None,
 ):
     if image_path is None:
         raise gr.Error("Please upload an image.")
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise gr.Error(
-            "ANTHROPIC_API_KEY is not set. See the setup instructions below."
-        )
+    api_key, is_owner = get_api_key(user_api_key)
+
+    # Enforce limits when using the owner's key
+    if is_owner:
+        session_id = get_session_id(request)
+        rate_limiter.check_image(session_id)
+        # Restrict to Haiku on the shared key to control costs
+        model = "claude-haiku-3-5"
 
     img_path = Path(image_path)
     tmp_dir = None
@@ -283,13 +403,17 @@ def process_image(
             cropped.save(crop_path)
             img_path = crop_path
 
-        result = call_with_retry(img_path, model, prompt)
+        result = call_with_retry(img_path, model, prompt, api_key)
         raw_text = result["extracted_data"]
         clean = clean_csv_response(raw_text)
 
         input_t = result["input_tokens"]
         output_t = result["output_tokens"]
         cost = compute_cost(input_t, output_t, model)
+
+        if is_owner:
+            rate_limiter.record_spend(cost)
+
         stats_html = format_stats_html(input_t, output_t, cost, result["api_time"])
 
         # Parse to DataFrame
@@ -328,16 +452,20 @@ def process_video(
     crop_right: int,
     crop_bottom: int,
     output_format: str,
+    user_api_key: str = "",
+    request: gr.Request = None,
     progress=gr.Progress(track_tqdm=False),
 ):
     if video_path is None:
         raise gr.Error("Please upload a video.")
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise gr.Error(
-            "ANTHROPIC_API_KEY is not set. See the setup instructions below."
-        )
+    api_key, is_owner = get_api_key(user_api_key)
+
+    if is_owner:
+        session_id = get_session_id(request)
+        rate_limiter.check_video(session_id)
+        model = "claude-haiku-3-5"
+        max_frames = min(int(max_frames), 10)  # Hard cap for shared key
 
     tmp_root = tempfile.mkdtemp()
     frames_dir = os.path.join(tmp_root, "frames")
@@ -392,7 +520,7 @@ def process_video(
             frac = 0.2 + 0.75 * (i / max(to_process, 1))
             progress(frac, desc=f"Processing frame {i + 1}/{to_process}...")
             try:
-                result = call_with_retry(fp, model, prompt)
+                result = call_with_retry(fp, model, prompt, api_key)
                 clean = clean_csv_response(result["extracted_data"])
                 total_input += result["input_tokens"]
                 total_output += result["output_tokens"]
@@ -419,6 +547,9 @@ def process_video(
 
         combined = pd.concat(all_dfs, ignore_index=True)
         cost = compute_cost(total_input, total_output, model)
+
+        if is_owner:
+            rate_limiter.record_spend(cost)
 
         extra = {
             "Extracted": str(total_extracted),
@@ -739,34 +870,36 @@ th {
 # ---------------------------------------------------------------------------
 
 SETUP_MD = """
+### Try it free
+
+This Space is powered by a shared API key with usage limits. \
+You get **{img_limit} image extractions** and **{vid_limit} video extractions** per hour, \
+using the Haiku model (fastest and cheapest).
+
+To unlock all models (Sonnet, Opus) and remove rate limits, enter your own API key below.
+
+### Get your own API key
+
+1. Go to [console.anthropic.com](https://console.anthropic.com/) and sign up or log in
+2. Navigate to **Settings > API Keys**
+3. Click **Create Key**, give it a name, and copy the key (starts with `sk-ant-`)
+4. Paste it into the **Your API Key** field above — it stays in your browser session only
+
 ### Running locally
 
-1. Get an API key from [console.anthropic.com](https://console.anthropic.com/)
-   - Sign up or log in
-   - Go to **Settings > API Keys**
-   - Click **Create Key**, give it a name, and copy the key (starts with `sk-ant-`)
-2. Export it in your terminal:
-   ```
-   export ANTHROPIC_API_KEY='sk-ant-...'
-   ```
-3. Run the app:
-   ```
-   pip install -r requirements.txt
-   python app.py
-   ```
+```bash
+export ANTHROPIC_API_KEY='sk-ant-...'
+pip install -r requirements.txt
+python app.py
+```
 
-### Running on HuggingFace Spaces
+### Duplicating this Space
 
-If you've duplicated this Space to your own account:
-
-1. Get an API key from [console.anthropic.com](https://console.anthropic.com/) (same steps as above)
-2. Go to your Space's **Settings** tab
-3. Scroll down to **Repository secrets**
-4. Click **New secret**
-5. Set the name to `ANTHROPIC_API_KEY` and paste your key as the value
-6. Click **Save**
-7. Your Space will restart automatically with the key available
-"""
+1. Click **Duplicate this Space** in the top right
+2. In your copy, go to **Settings > Repository secrets**
+3. Add a secret named `ANTHROPIC_API_KEY` with your key
+4. Your copy will run with full access and no shared limits
+""".format(img_limit=RATE_LIMIT_IMAGES_PER_HOUR, vid_limit=RATE_LIMIT_VIDEOS_PER_HOUR)
 
 # ---------------------------------------------------------------------------
 # App layout
@@ -790,13 +923,34 @@ with gr.Blocks(**_blocks_kwargs) as demo:
         elem_classes=["hero-subtitle"],
     )
 
-    # API key warning
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    # Status banner
+    if OWNER_API_KEY:
         gr.Markdown(
-            "**ANTHROPIC_API_KEY not set.** "
-            "See the *Setup: How to get an API key* section below. "
-            "Running locally? `export ANTHROPIC_API_KEY='sk-ant-...'`",
+            f"**Free to try** — {RATE_LIMIT_IMAGES_PER_HOUR} image / "
+            f"{RATE_LIMIT_VIDEOS_PER_HOUR} video extractions per hour using Haiku. "
+            "Bring your own API key to unlock all models and remove limits.",
             elem_classes=["api-warning"],
+        )
+    else:
+        gr.Markdown(
+            "**No shared API key configured.** Enter your own key below or "
+            "see the *Setup* section at the bottom.",
+            elem_classes=["api-warning"],
+        )
+
+    # Shared user API key input (outside tabs, applies to both)
+    with gr.Accordion("Your API Key (optional — unlocks all models)", open=False):
+        user_key_input = gr.Textbox(
+            value="",
+            label="Anthropic API Key",
+            placeholder="sk-ant-... (leave blank to use free tier)",
+            type="password",
+            lines=1,
+        )
+        gr.Markdown(
+            "Your key is sent directly to Anthropic and is never stored. "
+            "With your own key: all models available, no rate limits.",
+            elem_classes=["cost-note"],
         )
 
     with gr.Tabs(elem_classes=["tabs"]):
@@ -815,6 +969,7 @@ with gr.Blocks(**_blocks_kwargs) as demo:
                             choices=MODEL_CHOICES,
                             value=DEFAULT_MODEL,
                             label="Model",
+                            info="Free tier uses Haiku only",
                         )
                         img_prompt = gr.Textbox(
                             value=DEFAULT_PROMPT, label="Extraction Prompt", lines=2
@@ -862,15 +1017,18 @@ with gr.Blocks(**_blocks_kwargs) as demo:
                 on_image_format_change, [img_format], [img_df, img_text]
             )
 
-            def on_image_submit(image, model, prompt, cl, ct, cr, cb, fmt):
-                df, text, stats = process_image(image, model, prompt, cl, ct, cr, cb, fmt)
+            def on_image_submit(image, model, prompt, cl, ct, cr, cb, fmt, ukey, request: gr.Request):
+                df, text, stats = process_image(
+                    image, model, prompt, cl, ct, cr, cb, fmt,
+                    user_api_key=ukey, request=request,
+                )
                 if fmt == "Table":
                     return df, "", stats, gr.update(visible=True), gr.update(visible=False)
                 return None, text, stats, gr.update(visible=False), gr.update(visible=True)
 
             img_btn.click(
                 on_image_submit,
-                [img_input, img_model, img_prompt, img_cl, img_ct, img_cr, img_cb, img_format],
+                [img_input, img_model, img_prompt, img_cl, img_ct, img_cr, img_cb, img_format, user_key_input],
                 [img_df, img_text, img_stats, img_df, img_text],
             )
 
@@ -887,6 +1045,7 @@ with gr.Blocks(**_blocks_kwargs) as demo:
                             choices=MODEL_CHOICES,
                             value=DEFAULT_MODEL,
                             label="Model",
+                            info="Free tier uses Haiku only",
                         )
                         vid_prompt = gr.Textbox(
                             value=DEFAULT_PROMPT, label="Extraction Prompt", lines=2
@@ -907,6 +1066,7 @@ with gr.Blocks(**_blocks_kwargs) as demo:
                             value=20,
                             step=1,
                             label="Max frames to process",
+                            info="Free tier capped at 10",
                         )
                         vid_dedup = gr.Checkbox(
                             value=True, label="Deduplicate frames"
@@ -940,8 +1100,8 @@ with gr.Blocks(**_blocks_kwargs) as demo:
                     )
 
                     gr.Markdown(
-                        "Each frame costs ~$0.003-0.01 depending on size and model. "
-                        "A 20-frame extraction with Sonnet typically costs ~$0.10.",
+                        "Each frame costs ~$0.001-0.003 with Haiku. "
+                        "A 10-frame extraction typically costs ~$0.02.",
                         elem_classes=["cost-note"],
                     )
 
@@ -984,11 +1144,12 @@ with gr.Blocks(**_blocks_kwargs) as demo:
 
             def on_video_submit(
                 video, model, prompt, interval, maxf, dedup, hs, th,
-                cl, ct, cr, cb, fmt
+                cl, ct, cr, cb, fmt, ukey, request: gr.Request
             ):
                 df, text, stats, gallery = process_video(
                     video, model, prompt, interval, maxf, dedup, hs, th,
-                    cl, ct, cr, cb, fmt
+                    cl, ct, cr, cb, fmt,
+                    user_api_key=ukey, request=request,
                 )
                 if fmt == "Table":
                     return (
@@ -1005,7 +1166,7 @@ with gr.Blocks(**_blocks_kwargs) as demo:
                 [
                     vid_input, vid_model, vid_prompt, vid_interval, vid_maxframes,
                     vid_dedup, vid_hashsize, vid_threshold,
-                    vid_cl, vid_ct, vid_cr, vid_cb, vid_format,
+                    vid_cl, vid_ct, vid_cr, vid_cb, vid_format, user_key_input,
                 ],
                 [vid_df, vid_text, vid_stats, vid_gallery, vid_df, vid_text],
             )
