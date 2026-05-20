@@ -51,7 +51,6 @@ BASE_RETRY_DELAY = 2.0
 # Rate limiting — configurable via env vars
 RATE_LIMIT_IMAGES_PER_HOUR = int(os.environ.get("RATE_LIMIT_IMAGES", "10"))
 RATE_LIMIT_VIDEOS_PER_HOUR = int(os.environ.get("RATE_LIMIT_VIDEOS", "3"))
-DAILY_BUDGET_USD = float(os.environ.get("DAILY_BUDGET", "2.00"))
 
 # Owner API key is set as HF secret; users can optionally bring their own
 OWNER_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
@@ -62,36 +61,19 @@ OWNER_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 # ---------------------------------------------------------------------------
 
 class RateLimiter:
-    """Thread-safe per-session rate limiter with global daily budget."""
+    """Thread-safe per-session rate limiter for shared Max plan key."""
 
     def __init__(self):
         self._lock = threading.Lock()
-        # session_id -> list of timestamps
         self._image_requests: Dict[str, List[float]] = defaultdict(list)
         self._video_requests: Dict[str, List[float]] = defaultdict(list)
-        # Global daily spend tracking
-        self._daily_spend: float = 0.0
-        self._spend_date: str = ""
 
     def _prune(self, timestamps: List[float], window: float = 3600.0) -> List[float]:
-        """Remove entries older than window seconds."""
         cutoff = time.time() - window
         return [t for t in timestamps if t > cutoff]
 
-    def _reset_daily_if_needed(self):
-        today = time.strftime("%Y-%m-%d")
-        if self._spend_date != today:
-            self._daily_spend = 0.0
-            self._spend_date = today
-
     def check_image(self, session_id: str):
         with self._lock:
-            self._reset_daily_if_needed()
-            if self._daily_spend >= DAILY_BUDGET_USD:
-                raise gr.Error(
-                    f"Daily usage limit reached (${DAILY_BUDGET_USD:.2f}). "
-                    "Please try again tomorrow or use your own API key."
-                )
             self._image_requests[session_id] = self._prune(
                 self._image_requests[session_id]
             )
@@ -104,12 +86,6 @@ class RateLimiter:
 
     def check_video(self, session_id: str):
         with self._lock:
-            self._reset_daily_if_needed()
-            if self._daily_spend >= DAILY_BUDGET_USD:
-                raise gr.Error(
-                    f"Daily usage limit reached (${DAILY_BUDGET_USD:.2f}). "
-                    "Please try again tomorrow or use your own API key."
-                )
             self._video_requests[session_id] = self._prune(
                 self._video_requests[session_id]
             )
@@ -119,16 +95,6 @@ class RateLimiter:
                     "per hour. Please wait or use your own API key."
                 )
             self._video_requests[session_id].append(time.time())
-
-    def record_spend(self, cost: float):
-        with self._lock:
-            self._reset_daily_if_needed()
-            self._daily_spend += cost
-
-    def remaining_budget(self) -> float:
-        with self._lock:
-            self._reset_daily_if_needed()
-            return max(0.0, DAILY_BUDGET_USD - self._daily_spend)
 
 
 rate_limiter = RateLimiter()
@@ -380,12 +346,10 @@ def process_image(
 
     api_key, is_owner = get_api_key(user_api_key)
 
-    # Enforce limits when using the owner's key
+    # Enforce rate limits when using the shared key
     if is_owner:
         session_id = get_session_id(request)
         rate_limiter.check_image(session_id)
-        # Restrict to Haiku on the shared key to control costs
-        model = "claude-haiku-3-5"
 
     img_path = Path(image_path)
     tmp_dir = None
@@ -410,10 +374,6 @@ def process_image(
         input_t = result["input_tokens"]
         output_t = result["output_tokens"]
         cost = compute_cost(input_t, output_t, model)
-
-        if is_owner:
-            rate_limiter.record_spend(cost)
-
         stats_html = format_stats_html(input_t, output_t, cost, result["api_time"])
 
         # Parse to DataFrame
@@ -464,8 +424,7 @@ def process_video(
     if is_owner:
         session_id = get_session_id(request)
         rate_limiter.check_video(session_id)
-        model = "claude-haiku-3-5"
-        max_frames = min(int(max_frames), 10)  # Hard cap for shared key
+        max_frames = min(int(max_frames), 10)  # Cap for shared key
 
     tmp_root = tempfile.mkdtemp()
     frames_dir = os.path.join(tmp_root, "frames")
@@ -547,9 +506,6 @@ def process_video(
 
         combined = pd.concat(all_dfs, ignore_index=True)
         cost = compute_cost(total_input, total_output, model)
-
-        if is_owner:
-            rate_limiter.record_spend(cost)
 
         extra = {
             "Extracted": str(total_extracted),
@@ -872,11 +828,11 @@ th {
 SETUP_MD = """
 ### Try it free
 
-This Space is powered by a shared API key with usage limits. \
-You get **{img_limit} image extractions** and **{vid_limit} video extractions** per hour, \
-using the Haiku model (fastest and cheapest).
+This Space is powered by a shared key with fair-use limits. \
+You get **{img_limit} image extractions** and **{vid_limit} video extractions** per hour \
+with all models available.
 
-To unlock all models (Sonnet, Opus) and remove rate limits, enter your own API key below.
+To remove rate limits, enter your own API key above.
 
 ### Get your own API key
 
@@ -927,8 +883,8 @@ with gr.Blocks(**_blocks_kwargs) as demo:
     if OWNER_API_KEY:
         gr.Markdown(
             f"**Free to try** — {RATE_LIMIT_IMAGES_PER_HOUR} image / "
-            f"{RATE_LIMIT_VIDEOS_PER_HOUR} video extractions per hour using Haiku. "
-            "Bring your own API key to unlock all models and remove limits.",
+            f"{RATE_LIMIT_VIDEOS_PER_HOUR} video extractions per hour. "
+            "Bring your own API key to remove rate limits.",
             elem_classes=["api-warning"],
         )
     else:
@@ -939,7 +895,7 @@ with gr.Blocks(**_blocks_kwargs) as demo:
         )
 
     # Shared user API key input (outside tabs, applies to both)
-    with gr.Accordion("Your API Key (optional — unlocks all models)", open=False):
+    with gr.Accordion("Your API Key (optional — removes rate limits)", open=False):
         user_key_input = gr.Textbox(
             value="",
             label="Anthropic API Key",
@@ -949,7 +905,7 @@ with gr.Blocks(**_blocks_kwargs) as demo:
         )
         gr.Markdown(
             "Your key is sent directly to Anthropic and is never stored. "
-            "With your own key: all models available, no rate limits.",
+            "With your own key: no rate limits, no frame caps.",
             elem_classes=["cost-note"],
         )
 
@@ -969,7 +925,7 @@ with gr.Blocks(**_blocks_kwargs) as demo:
                             choices=MODEL_CHOICES,
                             value=DEFAULT_MODEL,
                             label="Model",
-                            info="Free tier uses Haiku only",
+                            info="All models available on free tier",
                         )
                         img_prompt = gr.Textbox(
                             value=DEFAULT_PROMPT, label="Extraction Prompt", lines=2
@@ -1045,7 +1001,7 @@ with gr.Blocks(**_blocks_kwargs) as demo:
                             choices=MODEL_CHOICES,
                             value=DEFAULT_MODEL,
                             label="Model",
-                            info="Free tier uses Haiku only",
+                            info="All models available on free tier",
                         )
                         vid_prompt = gr.Textbox(
                             value=DEFAULT_PROMPT, label="Extraction Prompt", lines=2
@@ -1066,7 +1022,7 @@ with gr.Blocks(**_blocks_kwargs) as demo:
                             value=20,
                             step=1,
                             label="Max frames to process",
-                            info="Free tier capped at 10",
+                            info="Free tier capped at 10 frames",
                         )
                         vid_dedup = gr.Checkbox(
                             value=True, label="Deduplicate frames"
@@ -1100,8 +1056,8 @@ with gr.Blocks(**_blocks_kwargs) as demo:
                     )
 
                     gr.Markdown(
-                        "Each frame costs ~$0.001-0.003 with Haiku. "
-                        "A 10-frame extraction typically costs ~$0.02.",
+                        "Free tier: max 10 frames per video. "
+                        "Use your own key to process up to 50 frames.",
                         elem_classes=["cost-note"],
                     )
 
