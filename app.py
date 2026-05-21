@@ -787,9 +787,10 @@ with gr.Blocks(**_blocks_kwargs) as demo:
                             value=DEFAULT_MODEL,
                             label="Model",
                         )
-                        img_prompt = gr.Textbox(
-                            value=DEFAULT_PROMPT, label="Extraction Prompt", lines=2
-                        )
+                        with gr.Accordion("Extraction Prompt", open=False):
+                            img_prompt = gr.Textbox(
+                                value=DEFAULT_PROMPT, label="Prompt", lines=2
+                            )
                         with gr.Accordion("Crop Region", open=False):
                             with gr.Row():
                                 img_cl = gr.Number(value=0, label="Left", precision=0)
@@ -856,9 +857,10 @@ with gr.Blocks(**_blocks_kwargs) as demo:
                             value=DEFAULT_MODEL,
                             label="Model",
                         )
-                        vid_prompt = gr.Textbox(
-                            value=DEFAULT_PROMPT, label="Extraction Prompt", lines=2
-                        )
+                        with gr.Accordion("Extraction Prompt", open=False):
+                            vid_prompt = gr.Textbox(
+                                value=DEFAULT_PROMPT, label="Prompt", lines=2
+                            )
 
                         gr.Markdown("FRAME EXTRACTION", elem_classes=["section-label"])
                         vid_interval = gr.Slider(
@@ -960,7 +962,7 @@ with gr.Blocks(**_blocks_kwargs) as demo:
                 )
 
     # Setup section — outside the main surface
-    with gr.Accordion("Setup: How to get an API key", open=False, elem_classes=["setup-section"]):
+    with gr.Accordion("Setup: How to get an API key", open=True, elem_classes=["setup-section"]):
         gr.Markdown(SETUP_MD)
 
     gr.Markdown(
